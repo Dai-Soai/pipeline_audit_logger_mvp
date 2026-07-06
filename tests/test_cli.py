@@ -43,3 +43,33 @@ def test_cli_appends_audit_event(tmp_path, monkeypatch):
     assert payload["artifact_type"] == "delivery_report"
     assert payload["source_path"] == str(input_path)
     assert payload["status"] == "RECORDED"
+
+
+def test_cli_dry_run_does_not_write_file(tmp_path, monkeypatch):
+    input_path = tmp_path / "delivery_report.json"
+    output_path = tmp_path / "audit_log.jsonl"
+
+    input_path.write_text(
+        json.dumps(
+            {
+                "artifact_type": "delivery_report",
+                "version": "0.1.0",
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "pipeline-audit-logger",
+            str(input_path),
+            "-o",
+            str(output_path),
+            "--dry-run",
+        ],
+    )
+
+    main()
+
+    assert not output_path.exists()
